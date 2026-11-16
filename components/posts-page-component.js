@@ -1,6 +1,15 @@
-import { USER_POSTS_PAGE } from "../routes.js";
+import { USER_POSTS_PAGE, POSTS_PAGE, AUTH_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { posts, goToPage, user } from "../index.js";
+import { toggleLike } from "../api.js";
+
+const escapeHtml = (str) => {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+};
 
 export function renderPostsPageComponent({ appEl }) {
   const formatDate = (dateString) => {
@@ -18,7 +27,6 @@ export function renderPostsPageComponent({ appEl }) {
       const isLiked = post.likes.some(
         (like) => like._id === user?._id || like.id === user?.id,
       );
-
       const likesCount = post.likes.length;
 
       return `
@@ -64,11 +72,41 @@ export function renderPostsPageComponent({ appEl }) {
     element: document.querySelector(".header-container"),
   });
 
-  for (let userEl of document.querySelectorAll(".post-header")) {
-    userEl.addEventListener("click", () => {
+  const postsList = appEl.querySelector(".posts");
+
+  postsList.addEventListener("click", (event) => {
+    const likeButton = event.target.closest(".like-button");
+    if (likeButton) {
+      console.log("1. Клик по лайку сработал!");
+
+      if (!user) {
+        alert("Войдите, чтобы ставить лайки!");
+        goToPage(AUTH_PAGE);
+        return;
+      }
+
+      const postId = likeButton.dataset.postId;
+      const token = `Bearer ${user.token}`;
+      console.log("2. Отправляем запрос для поста:", postId);
+
+      toggleLike({ postId, token })
+        .then((res) => {
+          console.log("3. Лайк успешно поставлен!");
+          goToPage(POSTS_PAGE);
+        })
+        .catch((error) => {
+          console.error("ОШИБКА ПРИ ЛАЙКЕ:", error);
+          alert("Не удалось поставить лайк. " + error.message);
+        });
+      return;
+    }
+
+    const postHeader = event.target.closest(".post-header");
+    if (postHeader) {
       goToPage(USER_POSTS_PAGE, {
-        userId: userEl.dataset.userId,
+        userId: postHeader.dataset.userId,
       });
-    });
-  }
+      return;
+    }
+  });
 }
