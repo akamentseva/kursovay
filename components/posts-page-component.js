@@ -1,7 +1,7 @@
 import { USER_POSTS_PAGE, POSTS_PAGE, AUTH_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { posts, goToPage, user } from "../index.js";
-import { toggleLike } from "../api.js";
+import { likePost, dislikePost } from "../api.js";
 
 const escapeHtml = (str) => {
   return String(str)
@@ -33,7 +33,8 @@ export function renderPostsPageComponent({ appEl }) {
         <li class="post">
           <div class="post-header" data-user-id="${post.user._id || post.user.id}">
               <img src="${post.user.imageUrl}" class="post-header__user-image">
-              <p class="post-header__user-name">${post.user.name}</p>
+              <!-- Применяем escapeHtml к имени -->
+              <p class="post-header__user-name">${escapeHtml(post.user.name)}</p>
           </div>
           <div class="post-image-container">
             <img class="post-image" src="${post.imageUrl}">
@@ -47,8 +48,9 @@ export function renderPostsPageComponent({ appEl }) {
             </p>
           </div>
           <p class="post-text">
-            <span class="user-name">${post.user.name}</span>
-            ${post.description}
+            <!-- Применяем escapeHtml к имени и описанию -->
+            <span class="user-name">${escapeHtml(post.user.name)}</span>
+            ${escapeHtml(post.description)}
           </p>
           <p class="post-date">
             ${formatDate(post.createdAt)}
@@ -77,8 +79,6 @@ export function renderPostsPageComponent({ appEl }) {
   postsList.addEventListener("click", (event) => {
     const likeButton = event.target.closest(".like-button");
     if (likeButton) {
-      console.log("1. Клик по лайку сработал!");
-
       if (!user) {
         alert("Войдите, чтобы ставить лайки!");
         goToPage(AUTH_PAGE);
@@ -87,17 +87,24 @@ export function renderPostsPageComponent({ appEl }) {
 
       const postId = likeButton.dataset.postId;
       const token = `Bearer ${user.token}`;
-      console.log("2. Отправляем запрос для поста:", postId);
 
-      toggleLike({ postId, token })
-        .then((res) => {
-          console.log("3. Лайк успешно поставлен!");
+      const post = posts.find((p) => (p._id || p.id) === postId);
+      const isAlreadyLiked =
+        post &&
+        post.likes.some((like) => like._id === user._id || like.id === user.id);
+
+      const request = isAlreadyLiked
+        ? dislikePost({ postId, token })
+        : likePost({ postId, token });
+
+      request
+        .then(() => {
           goToPage(POSTS_PAGE);
         })
         .catch((error) => {
-          console.error("ОШИБКА ПРИ ЛАЙКЕ:", error);
-          alert("Не удалось поставить лайк. " + error.message);
+          alert("Ошибка: " + error.message);
         });
+
       return;
     }
 
