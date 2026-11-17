@@ -1,7 +1,7 @@
 import { USER_POSTS_PAGE, POSTS_PAGE, AUTH_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { posts, goToPage, user } from "../index.js";
-import { toggleLike } from "../api.js";
+import { likePost } from "../api.js";
 
 const escapeHtml = (str) => {
   return String(str)
@@ -70,7 +70,7 @@ export function renderUserPostsPageComponent({ appEl }) {
         goToPage(AUTH_PAGE);
         return;
       }
-      toggleLike({
+      likePost({
         postId: likeButton.dataset.postId,
         token: `Bearer ${user.token}`,
       })

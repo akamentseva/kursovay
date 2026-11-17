@@ -85,8 +85,8 @@ export function addPost({ description, imageUrl, token }) {
     return response.json();
   });
 }
-export function toggleLike({ postId, token }) {
-  return fetch(`${postsHost}/${postId}/likes`, {
+export function likePost({ postId, token }) {
+  return fetch(`${postsHost}/${postId}/like`, {
     method: "POST",
     headers: {
       Authorization: token,
