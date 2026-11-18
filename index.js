@@ -75,8 +75,9 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE); // Если ошибка — на главную
+          console.error("Ошибка при загрузке постов:", error);
+          alert("Не удалось загрузить посты этого пользователя.");
+          goToPage(POSTS_PAGE);
         });
     }
 

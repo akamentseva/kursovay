@@ -24,9 +24,11 @@ export function renderPostsPageComponent({ appEl }) {
 
   const postsHtml = posts
     .map((post) => {
-      const isLiked = post.likes.some(
-        (like) => like._id === user?._id || like.id === user?.id,
-      );
+      const isLiked = post.likes.some((like) => {
+        const likeId = typeof like === "object" ? like._id || like.id : like;
+        const userId = user?._id || user?.id;
+        return likeId === userId;
+      });
       const likesCount = post.likes.length;
 
       return `
@@ -91,7 +93,11 @@ export function renderPostsPageComponent({ appEl }) {
       const post = posts.find((p) => (p._id || p.id) === postId);
       const isAlreadyLiked =
         post &&
-        post.likes.some((like) => like._id === user._id || like.id === user.id);
+        post.likes.some((like) => {
+          const likeId = typeof like === "object" ? like._id || like.id : like;
+          const userId = user?._id || user?.id;
+          return likeId === userId;
+        });
 
       const request = isAlreadyLiked
         ? dislikePost({ postId, token })
